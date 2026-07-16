@@ -26,7 +26,7 @@ lip_h    = 4;     // lid locating-lip depth
 lip_wall = 1.6;   // lid locating-lip thickness
 
 // ----- ESP32-S3-ETH board (STL-derived footprint) -----
-esp32_len            = 73;   // PCB length (RJ45 overhangs ~1 mm more -> 74 total)
+esp32_len            = 72.8; // PCB length per Waveshare drawing (RJ45 overhangs ~2.8 mm more)
 esp32_w              = 21;
 esp32_h              = 18;    // adjustable, excludes PoE module
 esp32_pcb_thickness  = 1.6;
@@ -61,18 +61,25 @@ base_h    = floor_th + internal_h;   // open-top base height
 // ----- ESP32 placement & standoffs -----
 esp32_standoff_h = 5;
 esp32_standoff_d = 6;
-esp32_hole_d     = 2.6;       // M2.5/M3 self-tap pilot
+// Board mounting holes measured at 1.66 mm -- far too small for screws into
+// printed pilots. Standoffs carry short locating PINS instead; the board is
+// registered by the pins and captured by the RJ45/USB-C wall openings.
+esp32_hole_d = 1.66;                    // actual board hole (reference)
+esp32_pin_d  = esp32_hole_d - 0.16;     // 1.5 -- slip fit, tune after test print
+esp32_pin_h  = 2.4;                     // proud of the 1.6 mm PCB by ~0.8 mm
 
 esp32_x = wall + esp32_front_clear;     // board min-X (USB-C edge near front)
 esp32_y = wall + 35;                    // board min-Y (clears panel body + wiring)
 esp32_z = floor_th + esp32_standoff_h;  // PCB underside Z
 
-// Measured mounting-hole pattern (board has a front pair and a rear pair).
-// dx = side-to-side (width) spacing, centred on the board width.
+// Mounting-hole pattern per the official Waveshare dimension drawing
+// (ESP32-S3-ETH-details-size.jpg): pairs are NOT symmetric. The rear pair
+// sits right at the rear corners, and the two pairs differ in width spacing.
 // front/rear = distance of each pair from the FRONT (Ethernet) PCB edge.
-esp32_hole_dx    = 18;     // width-wise hole spacing (centre-to-centre)
-esp32_hole_front = 17.5;   // front (Ethernet) pair, from front edge
-esp32_hole_rear  = 55.5;   // rear pair from front edge -- ASSUMED symmetric; MEASURE
+esp32_hole_dx_front = 17.78;                // front pair width spacing (c-t-c)
+esp32_hole_dx_rear  = 18.25;                // rear pair width spacing (c-t-c)
+esp32_hole_front    = 17.07;                // = 72.8 - 54.15 - 1.58
+esp32_hole_rear     = esp32_len - 1.58;     // 71.22 -- at the rear corners
 
 // ----- connector stack: BOTH on the FRONT short wall (per case-mini.stl) -----
 // The ESP32-S3-ETH carries USB-C + RJ45 on the SAME board end, stacked: RJ45
@@ -200,10 +207,10 @@ boss_positions = [
 ];
 
 esp32_standoff_positions = [
-    [esp32_x + esp32_hole_front, esp32_y + esp32_w/2 - esp32_hole_dx/2],
-    [esp32_x + esp32_hole_front, esp32_y + esp32_w/2 + esp32_hole_dx/2],
-    [esp32_x + esp32_hole_rear,  esp32_y + esp32_w/2 - esp32_hole_dx/2],
-    [esp32_x + esp32_hole_rear,  esp32_y + esp32_w/2 + esp32_hole_dx/2]
+    [esp32_x + esp32_hole_front, esp32_y + esp32_w/2 - esp32_hole_dx_front/2],
+    [esp32_x + esp32_hole_front, esp32_y + esp32_w/2 + esp32_hole_dx_front/2],
+    [esp32_x + esp32_hole_rear,  esp32_y + esp32_w/2 - esp32_hole_dx_rear/2],
+    [esp32_x + esp32_hole_rear,  esp32_y + esp32_w/2 + esp32_hole_dx_rear/2]
 ];
 
 pc817_standoff_positions = [
@@ -243,6 +250,15 @@ module mounting_standoff(pos, standoff_d, standoff_h, hole_d){
             cylinder(d=standoff_d, h=standoff_h);
             translate([0, 0, 1]) cylinder(d=hole_d, h=standoff_h);  // pilot, leaves 1 mm base
         }
+}
+
+module pin_standoff(pos, standoff_d, standoff_h, pin_d, pin_h){
+    // solid standoff with a locating pin on top -- for boards whose mounting
+    // holes are too small for screws into printed pilots
+    translate(pos){
+        cylinder(d=standoff_d, h=standoff_h);
+        translate([0, 0, standoff_h]) cylinder(d=pin_d, h=pin_h, $fn=24);
+    }
 }
 
 module honeycomb_panel_2d(width, height, radius, spacing, margin){
@@ -455,7 +471,7 @@ module enclosure_base(){
     for(p = boss_positions)
         screw_boss([p[0], p[1], floor_th], boss_d, internal_h, insert_hole_d, insert_hole_depth);
     for(p = esp32_standoff_positions)
-        mounting_standoff([p[0], p[1], floor_th], esp32_standoff_d, esp32_standoff_h, esp32_hole_d);
+        pin_standoff([p[0], p[1], floor_th], esp32_standoff_d, esp32_standoff_h, esp32_pin_d, esp32_pin_h);
     for(p = pc817_standoff_positions)
         mounting_standoff([p[0], p[1], floor_th], pc817_standoff_d, pc817_standoff_h, pc817_standoff_hole_d);
 }
