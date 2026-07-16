@@ -61,12 +61,16 @@ base_h    = floor_th + internal_h;   // open-top base height
 // ----- ESP32 placement & standoffs -----
 esp32_standoff_h = 5;
 esp32_standoff_d = 6;
-// Board mounting holes measured at 1.66 mm -- far too small for screws into
-// printed pilots. Standoffs carry short locating PINS instead; the board is
-// registered by the pins and captured by the RJ45/USB-C wall openings.
-esp32_hole_d = 1.66;                    // actual board hole (reference)
-esp32_pin_d  = esp32_hole_d - 0.16;     // 1.5 -- slip fit, tune after test print
-esp32_pin_h  = 2.4;                     // proud of the 1.6 mm PCB by ~0.8 mm
+// Board mounting holes measured at 1.66 mm -> M1.6 hardware.
+// "screw": standoffs get a 1.25 mm pilot for M1.6 self-tappers. Pilots this
+//          small may fuse shut in FDM -- clear with a 1.2-1.3 mm hand drill.
+// "pin":   standoffs carry short locating pins instead; board is registered
+//          by the pins and captured by the RJ45/USB-C wall openings.
+esp32_mount_style = "screw";            // "screw" or "pin"
+esp32_hole_d      = 1.66;               // actual board hole (reference)
+esp32_pilot_d     = 1.25;               // M1.6 self-tap pilot
+esp32_pin_d       = esp32_hole_d - 0.16; // 1.5 -- slip fit, tune after test print
+esp32_pin_h       = 2.4;                // proud of the 1.6 mm PCB by ~0.8 mm
 
 esp32_x = wall + esp32_front_clear;     // board min-X (USB-C edge near front)
 esp32_y = wall + 35;                    // board min-Y (clears panel body + wiring)
@@ -471,7 +475,10 @@ module enclosure_base(){
     for(p = boss_positions)
         screw_boss([p[0], p[1], floor_th], boss_d, internal_h, insert_hole_d, insert_hole_depth);
     for(p = esp32_standoff_positions)
-        pin_standoff([p[0], p[1], floor_th], esp32_standoff_d, esp32_standoff_h, esp32_pin_d, esp32_pin_h);
+        if(esp32_mount_style == "screw")
+            mounting_standoff([p[0], p[1], floor_th], esp32_standoff_d, esp32_standoff_h, esp32_pilot_d);
+        else
+            pin_standoff([p[0], p[1], floor_th], esp32_standoff_d, esp32_standoff_h, esp32_pin_d, esp32_pin_h);
     for(p = pc817_standoff_positions)
         mounting_standoff([p[0], p[1], floor_th], pc817_standoff_d, pc817_standoff_h, pc817_standoff_hole_d);
 }
