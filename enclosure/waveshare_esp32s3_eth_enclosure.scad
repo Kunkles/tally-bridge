@@ -521,6 +521,15 @@ module enclosure_lid(){
     }
 }
 
+// lid in print orientation: outer face on the bed at z=0, lip pointing up.
+// (The lid is modelled in assembly position at the top of the base; this
+// flips it 180 about X and drops it onto the build plate.)
+module enclosure_lid_print(){
+    translate([0, outer_w, base_h + lid_th])
+        rotate([180, 0, 0])
+            enclosure_lid();
+}
+
 // ---------------------------------------------------------------------
 // 5. RENDER SELECTOR
 // ---------------------------------------------------------------------
@@ -529,10 +538,10 @@ if(render_part == "base"){
     if(show_placeholders) placeholders();
 }
 else if(render_part == "lid"){
-    enclosure_lid();
+    enclosure_lid_print();
 }
 else if(render_part == "both"){
     enclosure_base();
     if(show_placeholders) placeholders();
-    translate([outer_len + 20, 0, 0]) enclosure_lid();
+    translate([outer_len + 20, 0, 0]) enclosure_lid_print();
 }
