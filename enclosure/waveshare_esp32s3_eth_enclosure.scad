@@ -99,14 +99,18 @@ rj45_center_above_pcb = 6.9;   // RJ45 opening centre above PCB top
 usbc_center_below_pcb = 1.6;   // USB-C opening centre below PCB bottom
 
 // USB-C opening (LOWER -- on the underside of the board)
-usb_c_cutout_w         = 9.5;   // along board width (Y)
-usb_c_cutout_h         = 3.2;   // vertical (Z)
+// Sized for the full plug OVERMOLD (USB-IF max ~12.35 x 6.5), not just the
+// receptacle, so any brand of cable seats fully. This consumes the thin
+// divider strip below the RJ45 opening -- the two merge into one stepped
+// cutout, which is fine: that strip was cosmetic, not structural.
+usb_c_cutout_w         = 12.6;  // along board width (Y)
+usb_c_cutout_h         = 5.8;   // vertical (Z)
 usb_c_cutout_clearance = 0.4;
 usb_c_cutout_x_offset  = 0;     // lateral nudge along wall (Y)
 usb_c_cutout_z         = pcb_bottom_z - usbc_center_below_pcb;
-usb_c_relief_w         = 14;
+usb_c_relief_w         = 14;    // (unused unless relief re-enabled)
 usb_c_relief_h         = 4.5;
-usb_c_relief_enabled   = true;
+usb_c_relief_enabled   = false; // opening is full-size now; no lip to relieve
 usb_c_relief_depth     = 1.2;
 
 // RJ45 opening (UPPER -- onboard Ethernet jack, SAME wall, above the board)
