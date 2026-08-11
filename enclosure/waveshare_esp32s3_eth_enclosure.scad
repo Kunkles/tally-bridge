@@ -173,6 +173,12 @@ panel_pos_along = (panel_side=="left" || panel_side=="right")
     : wall + internal_w*0.5;        // Y position when on a short wall
 panel_z = floor_th + internal_h*0.5;
 
+// Notch the lid lip above the panel module: the internal patch cable's
+// RJ45 clip (and the fingers pressing it) need the space directly under
+// the lid that the lip would otherwise occupy.
+panel_lip_notch_enabled = true;
+panel_lip_notch_w = panel_face_w + 6;   // span along the wall
+
 // Screw pattern as seen FROM OUTSIDE the wall: [horizontal, vertical] offset
 // from the bore centre, with right = + and up = +. Diagonal pair at 19 mm
 // horizontal x 23.5 mm vertical. Swap the signs on a row to flip the diagonal.
@@ -503,6 +509,21 @@ module lid_lip(){
         for(p = boss_positions)
             translate([p[0], p[1], base_h - lip_h - 0.5])
                 cylinder(d=boss_d + 2*lid_clearance + 1.0, h=lip_h + 1);
+        // notch the lip above the panel module (internal RJ45 clip clearance)
+        if(panel_module_enabled && panel_lip_notch_enabled){
+            nw = panel_lip_notch_w;
+            nd = wall + lid_clearance + lip_wall + 2;  // cuts past the lip inner face
+            nz = base_h - lip_h - 0.5;
+            nh = lip_h + 0.5;
+            if(panel_side == "left")
+                translate([panel_pos_along - nw/2, -0.5, nz]) cube([nw, nd, nh]);
+            else if(panel_side == "right")
+                translate([panel_pos_along - nw/2, outer_w + 0.5 - nd, nz]) cube([nw, nd, nh]);
+            else if(panel_side == "front")
+                translate([-0.5, panel_pos_along - nw/2, nz]) cube([nd, nw, nh]);
+            else if(panel_side == "back")
+                translate([outer_len + 0.5 - nd, panel_pos_along - nw/2, nz]) cube([nd, nw, nh]);
+        }
     }
 }
 
